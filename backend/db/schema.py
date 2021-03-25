@@ -8,6 +8,7 @@ class User(BaseModel):
     name: Optional[str] = None
     email: Optional[str] = None
     age: Optional[int] = None
+    company: Optional[str] = None
     join_date: Optional[datetime] = None
     job_title: Optional[str] = None
     gender: Optional[str] = None

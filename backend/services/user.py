@@ -5,7 +5,7 @@ from db import Database
 
 
 def get_datetime_obj(date: str) -> datetime:
-    return datetime.strptime(date, '%Y-%m-%dT%H:%M:%S.%f')
+    return datetime.fromisoformat(date)
 
 
 def get_query_string(query: dict):
@@ -52,16 +52,19 @@ class User():
                 "email": user['email'],
                 "age": user['age'],
                 "company": user['company'],
-                "join_date": user['join_date'],
+                "join_date": user['join_date'].isoformat(),
                 "job_title": user['job_title'],
                 "gender": user['gender'],
                 "salary": user['salary']}
 
     async def add(self, user: dict):
         db_user = await self.db.user_collection.insert_one(user)
-        user = await self.db.user_collection.find_one(
-            {"_id": db_user.inserted_id})
-        self.data = self.set_data(user)
+        if user := await self.db.user_collection.find_one(
+                {"_id": db_user.inserted_id}):
+            self.data = self.set_data(user)
+            return True
+        else:
+            False
 
     async def delete(self) -> bool:
         if self.data['_id'] and await self.db.user_collection.find_one(

@@ -1,7 +1,8 @@
 #!venv/bin/python3
 # -*- coding: utf-8 -*-
 
-from datetime import datetime
+import uvicorn
+
 from typing import List
 from fastapi import FastAPI
 
@@ -25,20 +26,20 @@ async def index():
 
 
 @api.get('/users', response_model=List[schema.User])
-async def get_by_parameters(_id: str = None,
-                            name: str = None,
-                            email: str = None,
-                            age: str = None,
-                            join_date: str = None,
-                            job_title: str = None,
-                            gender: str = None,
-                            salary: str = None):
-
-    get_all = True
+async def get_all_or_by_parameters(_id: str = None,
+                                   name: str = None,
+                                   email: str = None,
+                                   age: str = None,
+                                   company: str = None,
+                                   join_date: str = None,
+                                   job_title: str = None,
+                                   gender: str = None,
+                                   salary: str = None):
     query = {'_id': _id,
              'name': name,
              'email': email,
              'age': age,
+             'company': company,
              'join_date': join_date,
              'job_title': job_title,
              'gender': gender,
@@ -46,10 +47,12 @@ async def get_by_parameters(_id: str = None,
 
     for value in query.items():
         if value:
-            get_all = False
+            resp = await User.get_by_parameters(query)
+            return resp
 
-    if get_all:
-        resp = await User.get_all()
-    else:
-        resp = await User.get_by_parameters(query)
+    resp = await User.get_all()
     return resp
+
+
+if __name__ == '__main__':
+    uvicorn.run(api, host='localhost', port=8000)

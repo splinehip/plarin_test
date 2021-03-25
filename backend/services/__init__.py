@@ -2,7 +2,7 @@ __all__ = ['user']
 
 import json
 
-from services.user import User
+from services.user import User, get_datetime_obj
 
 
 async def create_all_users():
@@ -11,5 +11,6 @@ async def create_all_users():
 
     if not await User.get_all():
         for item in data:
+            item['join_date'] = get_datetime_obj(item['join_date'])
             user = User()
             await user.add(item)

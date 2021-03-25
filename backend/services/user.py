@@ -1,6 +1,42 @@
 from bson import ObjectId
+from datetime import datetime
 
 from db import Database
+
+
+def get_datetime_obj(date: str) -> datetime:
+    return datetime.strptime(date, '%Y-%m-%dT%H:%M:%S.%f')
+
+
+def get_query_string(query: dict):
+    query_str = {}
+    for key, value in query.items():
+        if value:
+            if key == '_id':
+                query_str.update(
+                    {key: {'$in': [ObjectId(id) for id in value.split('::')]}})
+            elif key == 'join_date':
+                value = value.split('::')
+                if (len(value) == 1
+                        or get_datetime_obj(value[0])
+                        > get_datetime_obj(value[1])):
+                    query_str.update(
+                        {key: {'$eq': get_datetime_obj(value[0])}})
+                else:
+                    query_str.update(
+                        {key: {'$gte': get_datetime_obj(value[0]),
+                               '$lte': get_datetime_obj(value[1])}})
+            elif key in ['age', 'salary']:
+                value = [int(i) for i in value.split('::')]
+                if len(value) == 1 or value[0] > value[1]:
+                    query_str.update(
+                        {key: {'$eq': value[0]}})
+                else:
+                    query_str.update(
+                        {key: {'$gte': value[0], '$lte': value[1]}})
+            else:
+                query_str.update({key: {'$in': value.split('::')}})
+    return query_str
 
 
 class User():
@@ -9,7 +45,7 @@ class User():
         self.db = Database()
         self.data = {}
 
-    @staticmethod
+    @ staticmethod
     def set_data(user: dict) -> dict:
         return {"_id": str(user["_id"]),
                 "name": user['name'],
@@ -36,7 +72,7 @@ class User():
             return True
         return False
 
-    @staticmethod
+    @ staticmethod
     async def get_all() -> list:
         db = Database()
         users = []
@@ -44,7 +80,7 @@ class User():
             users.append(User.set_data(user))
         return users
 
-    @staticmethod
+    @ staticmethod
     async def delete_all(users: 'list[dict]') -> 'list[bool]':
         db = Database()
         result = []
@@ -56,14 +92,12 @@ class User():
                 result.append(True)
         return result
 
-    @staticmethod
+    @ staticmethod
     async def get_by_parameters(query: dict) -> 'list[dict]':
         db = Database()
         result = []
-        for key, value in query.items():
-            if value:
-                async for user in db.user_collection.find(
-                        {key: {'$in': value.split(';')}}):
-                    result.append(User.set_data(user))
+        async for user in db.user_collection.find(
+                get_query_string(query)):
+            result.append(User.set_data(user))
 
         return result

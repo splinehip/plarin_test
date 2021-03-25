@@ -25,22 +25,16 @@ async def index():
 
 
 @api.get('/users', response_model=List[schema.User])
-async def get_all():
-    await create_all_users()
-    resp = await User.get_all()
-    return resp
-
-
-@api.get('/users/', response_model=List[schema.User])
 async def get_by_parameters(_id: str = None,
                             name: str = None,
                             email: str = None,
-                            age: int = None,
-                            join_date: datetime = None,
+                            age: str = None,
+                            join_date: str = None,
                             job_title: str = None,
                             gender: str = None,
-                            salary: int = None):
+                            salary: str = None):
 
+    get_all = True
     query = {'_id': _id,
              'name': name,
              'email': email,
@@ -50,5 +44,12 @@ async def get_by_parameters(_id: str = None,
              'gender': gender,
              'salary': salary}
 
-    resp = await User.get_by_parameters(query)
+    for value in query.items():
+        if value:
+            get_all = False
+
+    if get_all:
+        resp = await User.get_all()
+    else:
+        resp = await User.get_by_parameters(query)
     return resp

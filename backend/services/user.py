@@ -55,3 +55,15 @@ class User():
                     {'_id': ObjectId(user['_id'])})
                 result.append(True)
         return result
+
+    @staticmethod
+    async def get_by_parameters(query: dict) -> 'list[dict]':
+        db = Database()
+        result = []
+        for key, value in query.items():
+            if value:
+                async for user in db.user_collection.find(
+                        {key: {'$in': value.split(';')}}):
+                    result.append(User.set_data(user))
+
+        return result

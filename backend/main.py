@@ -6,7 +6,6 @@ import uvicorn
 from typing import List
 from fastapi import FastAPI
 
-
 from services import create_all_users
 from services.user import User
 from db import schema
